@@ -1,6 +1,14 @@
 ---
 name: Pushed
-on: [push]
+on:
+  push:
+    branches:
+      - master
+    pull_request:
+      branches:
+        - master
+    tags-ignore:
+      - v*
 
 jobs:
   test:
