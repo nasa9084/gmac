@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -17,7 +18,7 @@ var parser = flags.NewParser(&Command{
 			Type: flags.ErrHelp,
 		}
 	},
-}, flags.Default)
+}, flags.HelpFlag)
 
 type Command struct {
 	OutputFormat string `short:"o" long:"output" choice:"yaml" choice:"wide"`
@@ -31,6 +32,7 @@ type Command struct {
 func Run() error {
 	if _, err := parser.Parse(); err != nil {
 		if fe, ok := err.(*flags.Error); ok && fe.Type == flags.ErrHelp {
+			parser.WriteHelp(os.Stdout)
 			return nil
 		}
 		return err
