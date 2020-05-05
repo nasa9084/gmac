@@ -18,7 +18,7 @@ import (
 var authCommand *flags.Command
 
 func init() {
-	authCommand = must(parser.AddCommand("auth", "", "", &AuthCommand{}))
+	authCommand = must(parser.AddCommand("auth", "Authenticate to get OAuth token", "Authenticate to get OAuth token", &AuthCommand{}))
 }
 
 type AuthCommand struct {

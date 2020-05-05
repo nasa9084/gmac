@@ -15,7 +15,7 @@ import (
 var applyCommand *flags.Command
 
 func init() {
-	applyCommand = must(parser.AddCommand("apply", "", "", &ApplyCommand{}))
+	applyCommand = must(parser.AddCommand("apply", "Apply resource", "Apply resource", &ApplyCommand{}))
 }
 
 type ApplyCommand struct {
