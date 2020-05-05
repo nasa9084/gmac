@@ -15,6 +15,10 @@ build: $(BIN_DIR)/$(CMD_NAME)
 
 .PHONY: test
 test:
+	@$(GO) test -v ./... --short
+
+.PHONY: test-all
+test-all:
 	@$(GO) test -v ./...
 
 .PHONY: clean

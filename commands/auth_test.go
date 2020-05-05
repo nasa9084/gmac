@@ -15,6 +15,10 @@ func drainResponse(resp *http.Response) {
 }
 
 func TestListenCallback(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	const csrfState = "5a390de4-b7ed-46b7-bca5-8782eb40302f"
 	const want = "1a0da74e-5d29-4f68-9617-3fea5c3cb3db"
 
