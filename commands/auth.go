@@ -22,15 +22,14 @@ func init() {
 }
 
 type AuthCommand struct {
-	CredentialsFilePath string `short:"f" long:"credentials-file" default:"credentials.json"`
-	Port                int    `short:"p" long:"port" default:"8080" description:"localhost port to listen callback request"`
+	Port int `short:"p" long:"port" default:"8080" description:"localhost port to listen callback request"`
 }
 
 func (cmd *AuthCommand) Execute(args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	oauthConfig, err := getOAuthConfig(cmd.CredentialsFilePath)
+	oauthConfig, err := getOAuthConfig(cmd.CredentialsFilePath())
 	if err != nil {
 		return err
 	}
@@ -73,4 +72,12 @@ func listenCallback(ctx context.Context, port int, csrfState string) chan string
 		}
 	}()
 	return future
+}
+
+func (*AuthCommand) CredentialsFilePath() string {
+	val := authCommand.FindOptionByLongName("credentials-file").Value()
+	if val == nil {
+		return ""
+	}
+	return val.(string)
 }
