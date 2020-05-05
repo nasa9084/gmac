@@ -11,7 +11,7 @@ LDFLAGS = -ldflags "-X $(PKG_NAME)/commands.Version=$(VERSION) -X $(PKG_NAME)/co
 build:
 	@mkdir -p $(BIN_DIR)
 	@echo Version: $(VERSION), Revion: $(REVISION)
-	@$(GO) build -o $(BIN_DIR)/$(CMD_NAME) main.go
+	@$(GO) build $(LDFLAGS) -o $(BIN_DIR)/$(CMD_NAME) main.go
 
 .PHONY: test
 test:
