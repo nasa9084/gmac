@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest,windows-latest]
-    name: Build on Linux
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Golang
@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gac-${{ matrix.os }}
-          path: bin/gac
+          path: bin/gac*
