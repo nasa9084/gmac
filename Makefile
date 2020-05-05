@@ -6,12 +6,12 @@ BIN_DIR = $(PWD)/bin
 VERSION ?= $(shell git describe --tags --abbrev=0)
 REVISION ?= $(shell git rev-parse --short HEAD)
 LDFLAGS = -ldflags "-X $(PKG_NAME)/commands.Version=$(VERSION) -X $(PKG_NAME)/commands.Revision=$(REVISION)"
+SRCS = $(foreach dir,$(shell find . -type d),$(wildcard $(dir)/*.go))
+
+all: clean test build
 
 .PHONY: build
-build:
-	@mkdir -p $(BIN_DIR)
-	@echo Version: $(VERSION), Revion: $(REVISION)
-	@$(GO) build $(LDFLAGS) -o $(BIN_DIR)/$(CMD_NAME) main.go
+build: $(BIN_DIR)/$(CMD_NAME)
 
 .PHONY: test
 test:
@@ -20,3 +20,7 @@ test:
 .PHONY: clean
 clean:
 	@-rm -fr $(BIN_DIR)
+
+$(BIN_DIR)/$(CMD_NAME): $(SRCS)
+	@mkdir -p $(BIN_DIR)
+	@$(GO) build $(LDFLAGS) -o $(BIN_DIR)/$(CMD_NAME)
