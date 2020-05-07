@@ -1,0 +1,32 @@
+---
+before:
+  hooks:
+    - go mod download
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/nasa9084/gac/commands.Version={{.Version}}
+      - -X github.com/nasa9084/gac/commands.Revision={{.ShortCommit}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    ignore:
+      - goos: darwin
+        goarch: 386
+archives:
+  - format: binary
+    replacements:
+      386: i386
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
