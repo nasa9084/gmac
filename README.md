@@ -12,6 +12,8 @@ You can install `gmac` via `go get`:
 $ go get github.com/nasa9084/gmac
 ```
 
+or download pre-built binary from [Releases Page](https://github.com/nasa9084/gmac/releases).
+
 ### Authentication/Authorization
 
 At first, you need to do authenticate/authorize via Google OAuth. Steps are:
