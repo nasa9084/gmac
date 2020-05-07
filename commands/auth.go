@@ -54,24 +54,29 @@ func (cmd *AuthCommand) Execute(args []string) error {
 	return ioutil.WriteFile("./token.json", buf.Bytes(), 0644)
 }
 
-func listenCallback(ctx context.Context, port int, csrfState string) chan string {
-	future := make(chan string, 1)
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		if r.FormValue("state") != csrfState {
-			log.Print("state mismatch")
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`Auth Successful Completed, Please Close`)) //nolint:errcheck
-		future <- r.FormValue("code")
-	})
+func listenCallback(ctx context.Context, port int, csrfState string) <-chan string {
+	future, cb := oauthCallbackHandler(csrfState)
+	http.HandleFunc("/callback", cb)
 	go func() {
 		if err := http.ListenAndServe(":"+strconv.Itoa(port), nil); err != nil {
 			log.Printf("error on http.ListenAndServe: %v", err)
 		}
 	}()
 	return future
+}
+
+func oauthCallbackHandler(csrfState string) (<-chan string, http.HandlerFunc) {
+	future := make(chan string, 1)
+	return future, func(w http.ResponseWriter, r *http.Request) {
+		if r.FormValue("state") != csrfState {
+			log.Print("state mismatch")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		mustWriteString(w, `Auth Successful Completed, Please Close`)
+		future <- r.FormValue("code")
+	}
 }
 
 func (*AuthCommand) CredentialsFilePath() string {

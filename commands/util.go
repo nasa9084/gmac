@@ -75,3 +75,9 @@ func open(url string) error {
 	}
 	return exec.Command(cmd, url).Start()
 }
+
+func mustWriteString(w io.Writer, s string) {
+	if _, err := w.Write([]byte(s)); err != nil {
+		panic(err)
+	}
+}

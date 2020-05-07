@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -14,18 +14,17 @@ func drainResponse(resp *http.Response) {
 	resp.Body.Close()
 }
 
-func TestListenCallback(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
-
+func TestOAuthCallbackHandler(t *testing.T) {
 	const csrfState = "5a390de4-b7ed-46b7-bca5-8782eb40302f"
 	const want = "1a0da74e-5d29-4f68-9617-3fea5c3cb3db"
 
-	code := listenCallback(context.Background(), 8080, csrfState)
+	future, handler := oauthCallbackHandler(csrfState)
+
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
 
 	t.Run("invalid csrf state", func(t *testing.T) {
-		resp, err := http.Get(fmt.Sprintf("http://localhost:8080/callback?state=invalid_state&code=%s", want))
+		resp, err := http.Get(fmt.Sprintf("%s/callback?state=invalid_state&code=%s", srv.URL, want))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -38,7 +37,7 @@ func TestListenCallback(t *testing.T) {
 
 	})
 	t.Run("successful completed", func(t *testing.T) {
-		resp, err := http.Get(fmt.Sprintf("http://localhost:8080/callback?state=%s&code=%s", csrfState, want))
+		resp, err := http.Get(fmt.Sprintf("%s/callback?state=%s&code=%s", srv.URL, csrfState, want))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -49,7 +48,7 @@ func TestListenCallback(t *testing.T) {
 			return
 		}
 
-		got := <-code
+		got := <-future
 		if got != want {
 			t.Errorf("unexpected code: %s != %s", got, want)
 			return
