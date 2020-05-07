@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/jessevdk/go-flags"
+
 	"github.com/nasa9084/gmac/log"
 )
 

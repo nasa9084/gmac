@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/spf13/afero"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
@@ -21,6 +22,9 @@ var oauthScope = []string{
 	gmail.GmailLabelsScope,
 	gmail.GmailSettingsBasicScope,
 }
+
+var fs = afero.NewOsFs()
+var stdin io.Reader = os.Stdin
 
 type raw []byte
 
@@ -39,10 +43,10 @@ func getOAuthConfig(credentialsFilepath string) (*oauth2.Config, error) {
 	switch credentialsFilepath {
 	case "-": // read from stdin
 		log.Vprint("read OAuth config from stdin")
-		r = os.Stdin
+		r = stdin
 	case "": // read from default config path
 		log.Vprintf("read OAuth config from %s", defaultCredentialsFilepath)
-		f, err := os.Open(defaultCredentialsFilepath)
+		f, err := fs.Open(defaultCredentialsFilepath)
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +55,7 @@ func getOAuthConfig(credentialsFilepath string) (*oauth2.Config, error) {
 		r = f
 	default: // read from specified filepath
 		log.Vprintf("read OAuthconfig from %s", credentialsFilepath)
-		f, err := os.Open(credentialsFilepath)
+		f, err := fs.Open(credentialsFilepath)
 		if err != nil {
 			return nil, err
 		}
@@ -69,9 +73,9 @@ func getOAuthConfig(credentialsFilepath string) (*oauth2.Config, error) {
 	}
 	if credentialsFilepath != "" {
 		log.Vprint("OAuth config is not read from config directory: save into config directory")
-		if err := os.MkdirAll(configDir, 0755); err != nil {
+		if err := fs.MkdirAll(configDir, 0755); err != nil {
 			log.Printf("WARN: cannot create config directory: %s", configDir)
-		} else if err := ioutil.WriteFile(defaultCredentialsFilepath, b, 0644); err != nil {
+		} else if err := afero.WriteFile(fs, defaultCredentialsFilepath, b, 0644); err != nil {
 			log.Printf("WARN: %+v", err)
 		}
 	}
@@ -87,7 +91,7 @@ func getToken(refreshToken string) (*oauth2.Token, error) {
 	}
 	tokenFilepath := filepath.Join(configDir, "token.json")
 	log.Vprintf("refresh token is not passed, read OAuth token from %s", tokenFilepath)
-	b, err := ioutil.ReadFile(tokenFilepath)
+	b, err := afero.ReadFile(fs, tokenFilepath)
 	if err != nil {
 		return nil, err
 	}
