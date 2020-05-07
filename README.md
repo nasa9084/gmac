@@ -1,5 +1,6 @@
 GaC - Gmail as Code
 ===
+![Pushed](https://github.com/nasa9084/gac/workflows/Pushed/badge.svg)
 
 ## HOW TO USE
 
