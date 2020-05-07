@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"io"
+	"os"
 
 	"github.com/goccy/go-yaml"
 	"github.com/jessevdk/go-flags"
 
 	"github.com/nasa9084/gmac/gmail"
+	"github.com/nasa9084/gmac/log"
 )
 
 var applyCommand *flags.Command
@@ -19,22 +21,30 @@ func init() {
 }
 
 type ApplyCommand struct {
-	Target string `short:"f" long:"filename"`
+	Target string `short:"f" long:"filename" required:"yes"`
 }
 
 func (cmd *ApplyCommand) Execute([]string) error {
-	rc, err := openOrStdin(cmd.Target)
-	if err != nil {
-		return err
+	var r io.Reader
+	switch cmd.Target {
+	case "-":
+		r = os.Stdin
+	default:
+		f, err := os.Open(cmd.Target)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		r = f
 	}
-	defer rc.Close()
 
 	var proxy struct {
 		Kind string         `yaml:"kind"`
 		Rest map[string]raw `yaml:",inline"`
 	}
 	log.Println("unmarshalYAML")
-	if err := yaml.NewDecoder(rc).Decode(&proxy); err != nil {
+	if err := yaml.NewDecoder(r).Decode(&proxy); err != nil {
 		return err
 	}
 	if proxy.Kind == "" {

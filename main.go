@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	"github.com/nasa9084/gmac/commands"
+	"github.com/nasa9084/gmac/log"
 )
 
 func main() {

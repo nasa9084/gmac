@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/jessevdk/go-flags"
+	"github.com/nasa9084/gmac/log"
 	"golang.org/x/oauth2"
 )
 
@@ -46,12 +48,18 @@ func (cmd *AuthCommand) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Reflesh Token: %s\n", token.RefreshToken)
+	log.Printf("Reflesh Token: %s\n", token.RefreshToken)
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(token); err != nil {
 		return err
 	}
-	return ioutil.WriteFile("./token.json", buf.Bytes(), 0644)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filepath.Join(configDir, "token.json"), buf.Bytes(), 0644); err != nil {
+		return err
+	}
+	return nil
 }
 
 func listenCallback(ctx context.Context, port int, csrfState string) <-chan string {
@@ -69,7 +77,7 @@ func oauthCallbackHandler(csrfState string) (<-chan string, http.HandlerFunc) {
 	future := make(chan string, 1)
 	return future, func(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("state") != csrfState {
-			log.Print("state mismatch")
+			log.Print("CSRF state mismatch")
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

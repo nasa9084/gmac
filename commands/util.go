@@ -7,12 +7,20 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
+
+	"github.com/nasa9084/gmac/log"
 )
+
+var oauthScope = []string{
+	gmail.GmailLabelsScope,
+	gmail.GmailSettingsBasicScope,
+}
 
 type raw []byte
 
@@ -24,37 +32,62 @@ func (r *raw) UnmarshalYAML(data []byte) error {
 	return nil
 }
 
-func openOrStdin(filename string) (io.ReadCloser, error) {
-	if filename == "-" {
-		return ioutil.NopCloser(os.Stdin), nil
-	}
-	return os.Open(filename)
-}
+func getOAuthConfig(credentialsFilepath string) (*oauth2.Config, error) {
+	defaultCredentialsFilepath := filepath.Join(configDir, "credentials.json")
 
-func getOAuthConfig(credentialsFilePath string) (*oauth2.Config, error) {
-	rc, err := openOrStdin(credentialsFilePath)
+	var r io.Reader
+	switch credentialsFilepath {
+	case "-": // read from stdin
+		log.Vprint("read OAuth config from stdin")
+		r = os.Stdin
+	case "": // read from default config path
+		log.Vprintf("read OAuth config from %s", defaultCredentialsFilepath)
+		f, err := os.Open(defaultCredentialsFilepath)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		r = f
+	default: // read from specified filepath
+		log.Vprintf("read OAuthconfig from %s", credentialsFilepath)
+		f, err := os.Open(credentialsFilepath)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		r = f
+	}
+	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	defer rc.Close()
-	b, err := ioutil.ReadAll(rc)
+	oauthConfig, err := google.ConfigFromJSON(b, oauthScope...)
 	if err != nil {
 		return nil, err
 	}
-	oauthConfig, err := google.ConfigFromJSON(b, gmail.GmailLabelsScope, gmail.GmailSettingsBasicScope)
-	if err != nil {
-		return nil, err
+	if credentialsFilepath != "" {
+		log.Vprint("OAuth config is not read from config directory: save into config directory")
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			log.Printf("WARN: cannot create config directory: %s", configDir)
+		} else if err := ioutil.WriteFile(defaultCredentialsFilepath, b, 0644); err != nil {
+			log.Printf("WARN: %+v", err)
+		}
 	}
 	return oauthConfig, nil
 }
 
 func getToken(refreshToken string) (*oauth2.Token, error) {
 	if refreshToken != "" {
+		log.Vprint("refresh token is passed")
 		return &oauth2.Token{
 			RefreshToken: refreshToken,
 		}, nil
 	}
-	b, err := ioutil.ReadFile("./token.json")
+	tokenFilepath := filepath.Join(configDir, "token.json")
+	log.Vprintf("refresh token is not passed, read OAuth token from %s", tokenFilepath)
+	b, err := ioutil.ReadFile(tokenFilepath)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +100,7 @@ func getToken(refreshToken string) (*oauth2.Token, error) {
 
 func open(url string) error {
 	var cmd string
+	log.Vprintf("detected OS: %s", runtime.GOOS)
 	switch runtime.GOOS {
 	case "darwin":
 		cmd = "open"
