@@ -6,8 +6,8 @@ import (
 
 	"github.com/jessevdk/go-flags"
 
-	"github.com/nasa9084/gac/encoder"
-	"github.com/nasa9084/gac/gmail"
+	"github.com/nasa9084/gmac/encoder"
+	"github.com/nasa9084/gmac/gmail"
 )
 
 var (

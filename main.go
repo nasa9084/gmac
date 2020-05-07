@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/nasa9084/gac/commands"
+	"github.com/nasa9084/gmac/commands"
 )
 
 func main() {

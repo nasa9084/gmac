@@ -1,4 +1,4 @@
-module github.com/nasa9084/gac
+module github.com/nasa9084/gmac
 
 go 1.14
 

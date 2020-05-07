@@ -9,7 +9,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/jessevdk/go-flags"
 
-	"github.com/nasa9084/gac/gmail"
+	"github.com/nasa9084/gmac/gmail"
 )
 
 var applyCommand *flags.Command

@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/goccy/go-yaml"
-	"github.com/nasa9084/gac/gmail"
+	"github.com/nasa9084/gmac/gmail"
 )
 
 var nonParen = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
