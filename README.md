@@ -1,6 +1,6 @@
 GMaC - Gmail as Code
 ===
-![Pushed](https://github.com/nasa9084/gmac/workflows/Pushed/badge.svg)
+![Test](https://github.com/nasa9084/gmac/workflows/Test/badge.svg)
 
 ## HOW TO USE
 
