@@ -42,7 +42,7 @@ type Command struct {
 	OutputFormat string `short:"o" long:"output" choice:"yaml" choice:"wide"`
 
 	CredentialsFilePath string `short:"c" long:"credentials-file" description:"path to OAuth credentials file"`
-	RefreshToken        string `short:"t" long:"refresh-token" description:"OAuth reflesh token"`
+	RefreshToken        string `short:"t" long:"refresh-token" env:"GMAC_REFRESH_TOKEN" description:"OAuth reflesh token"`
 
 	Verbose func() error `long:"verbose" description:"show verbose log"`
 
