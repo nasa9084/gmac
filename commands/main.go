@@ -13,7 +13,7 @@ var (
 
 var parser = flags.NewParser(&Command{
 	ShowVersion: func() error {
-		fmt.Printf("Version: %s\nRevision: %s", Version, Revision)
+		fmt.Printf("Version: %s\nRevision: %s\n", Version, Revision)
 		return &flags.Error{
 			Type: flags.ErrHelp,
 		}
@@ -23,17 +23,22 @@ var parser = flags.NewParser(&Command{
 type Command struct {
 	OutputFormat string `short:"o" long:"output" choice:"yaml" choice:"wide"`
 
-	CredentialsFilePath string `short:"c" long:"credentials-file" default:"credentials.json"`
-	RefreshToken        string `short:"t" long:"refresh-token"`
+	CredentialsFilePath string `short:"c" long:"credentials-file" description:"path to OAuth credentials file"`
+	RefreshToken        string `short:"t" long:"refresh-token" description:"OAuth reflesh token"`
 
 	ShowVersion func() error `short:"v" long:"version"`
 }
 
 func Run() error {
 	if _, err := parser.Parse(); err != nil {
-		if fe, ok := err.(*flags.Error); ok && fe.Type == flags.ErrHelp {
-			parser.WriteHelp(os.Stdout)
-			return nil
+		if fe, ok := err.(*flags.Error); ok {
+			switch fe.Type {
+			case flags.ErrHelp, flags.ErrCommandRequired:
+				if !parser.FindOptionByLongName("version").IsSet() {
+					parser.WriteHelp(os.Stdout)
+				}
+				return nil
+			}
 		}
 		return err
 	}
