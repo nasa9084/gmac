@@ -207,7 +207,7 @@ func (c *Client) convertFilterToGmail(filter Filter) (*gmail.Filter, error) {
 	}
 	switch filter.Action.Category {
 	case "": // nothing to do
-	case "primary", "personal", "mail":
+	case "primary", "personal", "main":
 		gf.Action.AddLabelIds = append(gf.Action.AddLabelIds, "CATEGORY_PERSONAL")
 	case "social":
 		gf.Action.AddLabelIds = append(gf.Action.AddLabelIds, "CATEGORY_SOCIAL")
