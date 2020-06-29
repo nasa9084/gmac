@@ -43,7 +43,7 @@ $ gmac get filters -o yaml > filters.yml
 $ gmac apply -f filters.yml
 ```
 
-This command applies given filters.yml to your Gmail Filters. This command removes all existing filters at first, then create filters defined in given YAML file. So note that you add a new filter via Gmail UI and do not add it into YAML file, the filter you added only via UI will be removed when the next time you run this command with your outdated config.
+This command applies given filters.yml to your Gmail Filters. This command removes all existing filters at first, then create filters defined in given YAML file. So note that you add a new filter via Gmail UI and do not add it into YAML file, the filter you added only via UI will be removed when the next time you run this command with your outdated config. To apply filter to existing emails, use `-e` flag.
 
 ##### Filter Configuration
 
