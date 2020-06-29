@@ -21,7 +21,8 @@ func init() {
 }
 
 type ApplyCommand struct {
-	Target string `short:"f" long:"filename" required:"yes"`
+	Target                string `short:"f" long:"filename" required:"yes"`
+	ApplyToExistingEmails bool   `short:"e" long:"apply-to-existing"`
 }
 
 func (cmd *ApplyCommand) Execute([]string) error {
@@ -94,6 +95,13 @@ func (cmd *ApplyCommand) applyFilter(data []byte) error {
 		log.Printf("Create filter: %s", filter.String())
 		if err := c.CreateFilter(ctx, filter); err != nil {
 			return err
+		}
+
+		if cmd.ApplyToExistingEmails {
+			log.Printf("Apply filter %s to existing emails", filter.String())
+			if err := c.ApplyLabelToExistingEmail(ctx, filter); err != nil {
+				return err
+			}
 		}
 	}
 

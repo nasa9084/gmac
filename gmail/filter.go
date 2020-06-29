@@ -109,6 +109,55 @@ func (c *Client) DeleteFilterByID(ctx context.Context, id string) error {
 	return nil
 }
 
+func (c *Client) ApplyLabelToExistingEmail(ctx context.Context, filter Filter) error {
+	if filter.Action.AddLabel == "" {
+		return nil
+	}
+
+	gf, err := c.convertFilterToGmail(filter)
+	if err != nil {
+		return err
+	}
+
+	if err := c.svc.Users.Messages.List("me").Q(filter.Criteria.String()).MaxResults(999).Pages(
+		ctx,
+		func(msgsResp *gmail.ListMessagesResponse) error {
+			if len(msgsResp.Messages) == 0 {
+				return nil
+			}
+
+			messageIDs := make([]string, 0, len(msgsResp.Messages))
+
+			for _, msg := range msgsResp.Messages {
+				messageIDs = append(messageIDs, msg.Id)
+			}
+
+			var begin int
+			for begin < len(messageIDs) {
+				end := begin + 1000
+				if len(messageIDs) < end {
+					end = len(messageIDs)
+				}
+				batchModifyMessagesRequest := &gmail.BatchModifyMessagesRequest{
+					AddLabelIds:    gf.Action.AddLabelIds,
+					RemoveLabelIds: gf.Action.RemoveLabelIds,
+					Ids:            messageIDs[begin:end],
+				}
+
+				if err := c.svc.Users.Messages.BatchModify("me", batchModifyMessagesRequest).Context(ctx).Do(); err != nil {
+					return err
+				}
+				begin = end
+			}
+			return nil
+		},
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) convertFilterFromGmail(gf *gmail.Filter) Filter {
 	var f Filter
 	f.id = gf.Id

@@ -20,6 +20,7 @@ import (
 
 var oauthScope = []string{
 	gmail.GmailLabelsScope,
+	gmail.GmailModifyScope,
 	gmail.GmailSettingsBasicScope,
 }
 
