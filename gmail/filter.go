@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nasa9084/go-pageloop"
 	"google.golang.org/api/gmail/v1"
 )
 
@@ -114,10 +115,7 @@ func (c *Client) ApplyLabelToExistingEmail(ctx context.Context, filter Filter) e
 		return nil
 	}
 
-	gf, err := c.convertFilterToGmail(filter)
-	if err != nil {
-		return err
-	}
+	var messageIDs []string
 
 	if err := c.svc.Users.Messages.List("me").Q(filter.Criteria.String()).MaxResults(999).Pages(
 		ctx,
@@ -132,27 +130,29 @@ func (c *Client) ApplyLabelToExistingEmail(ctx context.Context, filter Filter) e
 				messageIDs = append(messageIDs, msg.Id)
 			}
 
-			var begin int
-			for begin < len(messageIDs) {
-				end := begin + 1000
-				if len(messageIDs) < end {
-					end = len(messageIDs)
-				}
-				batchModifyMessagesRequest := &gmail.BatchModifyMessagesRequest{
-					AddLabelIds:    gf.Action.AddLabelIds,
-					RemoveLabelIds: gf.Action.RemoveLabelIds,
-					Ids:            messageIDs[begin:end],
-				}
-
-				if err := c.svc.Users.Messages.BatchModify("me", batchModifyMessagesRequest).Context(ctx).Do(); err != nil {
-					return err
-				}
-				begin = end
-			}
 			return nil
 		},
 	); err != nil {
 		return err
+	}
+
+	gf, err := c.convertFilterToGmail(filter)
+	if err != nil {
+		return err
+	}
+
+	for pager := pageloop.NewPager(1000, len(messageIDs)); pager.Next(); {
+		begin, end := pager.Index()
+
+		batchModifyMessagesRequest := &gmail.BatchModifyMessagesRequest{
+			AddLabelIds:    gf.Action.AddLabelIds,
+			RemoveLabelIds: gf.Action.RemoveLabelIds,
+			Ids:            messageIDs[begin:end],
+		}
+
+		if err := c.svc.Users.Messages.BatchModify("me", batchModifyMessagesRequest).Context(ctx).Do(); err != nil {
+			return err
+		}
 	}
 
 	return nil
